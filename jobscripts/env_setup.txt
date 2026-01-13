@@ -1,0 +1,16 @@
+#!/bin/bash --login
+#SBATCH -p serial
+#SBATCH -t 0-1       # 1 hour wallclock time limit (max permitted is 7-0, i.e. 7 days)
+
+# generic jobscript for:
+# installing conda
+# loading conda env
+# installing dependencies and version
+
+module purge
+module load apps/binapps/conda/miniforge3/25.9.1
+
+conda env create --file=./../env.yaml
+
+conda list
+# just for good measure and debugging, not necessary
