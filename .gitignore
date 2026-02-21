@@ -1,3 +1,29 @@
+-
+# Folders
+-
 data/
+# Data is tracked and transferred using git lfs
+
 models/
+# Versioning for FER system
+
+logs/
+# Logs for CGAN (Jupyter)
+
+
+temp_folder_saves/
+# Logs before extensive logging was implemented
+
+-
+# Files
+-
 *.out
+*.log
+# Slurm stdout and stderr
+
+checkpoint[s]_*
+.ipynb_checkpoints/
+# CGAN versions
+
+__pycache__/
+*.py[cod]
