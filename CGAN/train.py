@@ -8,7 +8,6 @@ from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 from torch import autograd
-from torch.autograd import Variable
 from torchvision.utils import make_grid
 import matplotlib.pyplot as plt
 from torchvision.utils import save_image
@@ -184,11 +183,11 @@ def generator_train_step(discriminator, generator, g_optimizer, batch_size,
 def discriminator_train_step(discriminator, generator, d_optimizer, real_images, labels,
                              latent_space, lambda_gp=10.0):
     discriminator.train()
-    generator.eval()  # optional, but fine for D step
+    generator.eval()  
     B = real_images.size(0)
 
     z = torch.randn(B, latent_space, device=real_images.device)
-    fake_images = generator(z, labels)  # IMPORTANT: same labels
+    fake_images = generator(z, labels) 
 
     D_real = discriminator(real_images, labels).view(B)
     D_fake = discriminator(fake_images.detach(), labels).view(B)
@@ -216,18 +215,6 @@ def discriminator_train_step(discriminator, generator, d_optimizer, real_images,
     
     return d_loss.item(), D_real.mean().item(), D_fake.mean().item(), gp.item(), gap.item()
 
-
-
-# ---- YOU MUST IMPORT/DEFINE THESE FROM YOUR PROJECT ----
-# data_loader, dataset
-# generator, discriminator
-# g_optimizer, d_optimizer
-# discriminator_train_step, generator_train_step
-# latent_space
-#
-# Example:
-# from my_project import data_loader, dataset, generator, discriminator, ...
-# --------------------------------------------------------
 
 def ensure_dir(p): os.makedirs(p, exist_ok=True)
 
