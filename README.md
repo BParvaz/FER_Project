@@ -1,53 +1,56 @@
 
-# my project!
+## Facial Expression Recognition with Generative Augmentation
 
-## what is it?
+### Overview
 
-facial expression recognition software.
+This project implements a facial expression recognition (FER) pipeline based on ResNet-18, with conditional WGAN-GP used for minority-class data augmentation.
 
--   based on ResNet18
+The goal is to investigate whether generative models can mitigate class imbalance in FER datasets such as FER2013 and RAF-DB.
+
+A diffusion-based generative model is planned for comparison against the GAN-based approach.
+
+----------
+
+### Motivation
+
+Facial expression recognition has seen significant recent development, while still presenting open challenges — particularly in handling imbalanced emotion classes.
+
+Emerging research explores broader applications of affect recognition, including mental health–related contexts.
+
+This project serves both as a research investigation into generative augmentation and as a systems-level learning experience involving HPC workflows and experimental evaluation.
+
+----------
+
+### Current Status
+
+-   ResNet-18 classifier implemented in PyTorch
     
--   implements conditional WGAN-GP for data augmentation
+-   Conditional WGAN-GP integrated for class-specific augmentation
     
--   planned diffusion model implementation to compare approaches, use cases, and limitations
+-   Multi-run training experiments conducted on institutional HPC (A100/L40S GPUs)
+    
+-   Ongoing evaluation using macro F1, balanced accuracy, and per-class recall
     
 
-## why?
+----------
 
--   FER has seen [significant development](https://www.mdpi.com/2695726) recently, while still offering room for growth
+### Roadmap
+
+1.  Rigorous validation and testing of existing training pipeline
     
--   there are papers exploring medical applications, such as [detecting depression](https://jestec.taylors.edu.my/Special%20Issue%20on%20ICIT2022_3/ICIT2022_3_18.pd)
+2.  Implementation of diffusion-based generative baseline
     
--   it’s a personal interest of mine that i believe has space for diverse use cases
+3.  Further improvement of generator quality and stability
+    
+4.  Refactoring for improved modularity across datasets and use cases
+    
+5.  Improved command-line interface and usability
+    
+6.  Addition of representative synthetic samples
     
 
-## how's it going?
+----------
 
--   ~~good, how about you?~~
-    
--   i’m really happy with how the project has progressed so far
-    
--   as a learning experience, it’s allowed me to branch into different areas of software development (notably HPC and integrating independent research into my work)
+### Acknowledgements
 
-## key components
-
- - [FER model](https://github.com/BParvaz/FER_Project/blob/main/model.ipynb)
- - [WGAN-GP](https://github.com/BParvaz/FER_Project/blob/main/CGAN/train.py)
- - [dataset](https://www.kaggle.com/competitions/challenges-in-representation-learning-facial-expression-recognition-challenge/data)
- - [email](mailto:bahramaparvaz@outlook.com)
-
-## todo (from necessary to aspirational)
-
-1.  rigorous testing of existing code
-    
-2.  implement diffusion model
-    
-3.  improve existing model performance
-    
-4.  improve modularity to make dataset/use-case changes easier
-    
-5.  streamline usage from command-line scripts to a cleaner interface
-    
-6.  eventually add representative data samples to the repository
-
-thanks to ainur for supervision and guidance, and to the team managing UOM’s HPC resources for supporting the computational work behind this project.
+Thanks to Ainur for supervision and guidance, and to the team managing UoM’s HPC resources for supporting the computational work behind this project.

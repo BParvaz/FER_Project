@@ -11,9 +11,9 @@ from torch import autograd
 from torchvision.utils import make_grid
 import matplotlib.pyplot as plt
 from torchvision.utils import save_image
-import glob
 from PIL import Image, ImageDraw, ImageFont
 from utils.versioning import make_run_dirs
+from torchvision.models import resnet18
 """
 FERDataset
 A class which inherits the pytorch dataset for storing and manipulating our input
@@ -61,22 +61,11 @@ class FERDataset(Dataset):
     @property
     def dist(self):
         return self.df['emotion'].value_counts()
-    
-fer2013_dataframe = pandas.read_csv('./data/FER2013/train.csv')
-# we're going one back
-dataset = FERDataset(dataframe=fer2013_dataframe)
-from torchvision.models import resnet18
-resnet18().fc.in_features
-num_ftrs = resnet18().fc.in_features
-latent_space = 256
 
 transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.5,), std=(0.5,))
 ])
-dataset = FERDataset(dataframe=fer2013_dataframe,transform=transform)
-data_loader = DataLoader(dataset, batch_size=64, shuffle=True)
-img_shape = dataset[0][0].shape
 
 class ProjectionDiscriminator(nn.Module):
     def __init__(self, img_shape, num_classes):
@@ -155,12 +144,6 @@ class Generator(nn.Module):
         img = self.net(out)
 
         return img
-    
-generator = Generator(latent_space,len(dataset.classes)).cuda()
-
-discriminator = ProjectionDiscriminator(img_shape,len(dataset.classes)).cuda()
-d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=1e-5)
-g_optimizer = torch.optim.Adam(generator.parameters(), lr=1e-4)
 
 def generator_train_step(discriminator, generator, g_optimizer, batch_size,
                          latent_space, num_classes):
@@ -346,16 +329,28 @@ def create_final_graph(
     return out_dir
 
 def main():
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    # move models to gpu:
-    generator.to(device)
-    discriminator.to(device)
 
     # constant setup
     num_epochs = 250
     n_critic = 5
     lambda_gp = 10.0
+    latent_space = 256
+
+    fer2013_dataframe = pandas.read_csv('./data/FER2013/train.csv')
+    #resnet18().fc.in_features
+    dataset = FERDataset(dataframe=fer2013_dataframe,transform=transform)
+    data_loader = DataLoader(dataset, batch_size=64, shuffle=True)
+    img_shape = dataset[0][0].shape
+    generator = Generator(latent_space,len(dataset.classes)).cuda()
+    discriminator = ProjectionDiscriminator(img_shape,len(dataset.classes)).cuda()
+    d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=1e-5)
+    g_optimizer = torch.optim.Adam(generator.parameters(), lr=1e-4)
+
+    # move models to gpu:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    generator.to(device)
+    discriminator.to(device)
+
 
     # set up logging
     run = make_run_dirs("logs")
