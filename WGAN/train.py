@@ -5,7 +5,7 @@ import pandas
 import numpy as np
 from torch import nn
 from torchvision import transforms
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, Subset
 from PIL import Image
 from torch import autograd
 from torchvision.utils import make_grid
@@ -41,7 +41,6 @@ class FERDataset(Dataset):
         img = Image.fromarray(img).convert("L")
 
         label = int(row['emotion'])
-
         # transform img
         if self.transform:
             img = self.transform(img)
@@ -78,15 +77,13 @@ class ProjectionDiscriminator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
             nn.Linear(1024, 512),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(512, 256),
-            nn.LeakyReLU(0.2, inplace=True),
         )
 
         # unconditional score f(x)
-        self.fc = nn.Linear(256, 1)
+        self.fc = nn.Linear(512, 1)
 
         # label embedding e(y)
-        self.embed = nn.Embedding(num_classes, 256)
+        self.embed = nn.Embedding(num_classes, 512)
 
     def forward(self, img, labels):
         h = self.feature(img.view(img.size(0), -1))   # h(x)
@@ -105,32 +102,71 @@ class Generator(nn.Module):
 
         self.label_emb = nn.Embedding(num_classes, num_classes)
 
+        Width = 512
+
         self.init_size = 6  # 6x6 feature map
-        self.fc = nn.Linear(latent_dim + num_classes, 256 * self.init_size * self.init_size)
+        self.fc = nn.Linear(latent_dim + num_classes, Width * self.init_size * self.init_size)
+
+
+        class RefinementBlock(nn.Module):
+            def __init__(self, channels):
+                super().__init__()
+
+                self.conv1 = nn.Conv2d(channels, channels, 3, padding=1)
+                self.bn1 = nn.BatchNorm2d(channels)
+
+                self.conv2 = nn.Conv2d(channels, channels, 3, padding=1)
+                self.bn2 = nn.BatchNorm2d(channels)
+
+                self.act = nn.LeakyReLU(0.2)
+
+            def forward(self, x):
+                identity = x
+
+                out = self.conv1(x)
+                out = self.bn1(out)
+                out = self.act(out)
+
+                out = self.conv2(out)
+                out = self.bn2(out)
+
+                out = 0.1*out + identity   # ← residual connection
+
+                return self.act(out)
+
 
         self.net = nn.Sequential(
-            nn.BatchNorm2d(256),
 
-            nn.ConvTranspose2d(256, 128, 4, stride=2, padding=1),  # 12x12
-            nn.BatchNorm2d(128),
+            # 512 to 256
+            nn.ConvTranspose2d(Width, Width//2, 4, stride=2, padding=1),  # 12x12
+            nn.BatchNorm2d(Width//2),
+            nn.LeakyReLU(0.2, inplace=True),
+            RefinementBlock(Width//2),
+
+
+
+            # 256 to 128
+            nn.ConvTranspose2d(Width//2, Width//4, 4, stride=2, padding=1),  # 24 24
+            nn.BatchNorm2d(Width//4),
+            nn.LeakyReLU(0.2, inplace=True),
+            RefinementBlock(Width//4),
+
+
+
+
+            # 128 to 64
+            nn.ConvTranspose2d(Width//4, Width//8, 4, stride=2, padding=1),   # 48 48
+            nn.BatchNorm2d(Width//8),
             nn.LeakyReLU(0.2, inplace=True),
 
-            nn.ConvTranspose2d(128, 64, 4, stride=2, padding=1),   # 24x24
-            nn.BatchNorm2d(64),
-            nn.LeakyReLU(0.2, inplace=True),
+            RefinementBlock(Width//8),
+            RefinementBlock(Width//8),
 
-            # upsample to 48x48 but KEEP features
-            nn.ConvTranspose2d(64, 64, 4, stride=2, padding=1),    # 48x48
-            nn.BatchNorm2d(64),
-            nn.LeakyReLU(0.2, inplace=True),
-
-            # refine at 48x48
-            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm2d(64),
-            nn.LeakyReLU(0.2, inplace=True),
+            RefinementBlock(Width//8),
+            nn.LeakyReLU(0.2),
 
             # final projection to image
-            nn.Conv2d(64, img_channels, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(Width//8, img_channels, kernel_size=3, stride=1, padding=1),
             nn.Tanh()
         )
 
@@ -140,7 +176,7 @@ class Generator(nn.Module):
         x = torch.cat((z, c), dim=1)
 
         out = self.fc(x)
-        out = out.view(out.size(0), 256, self.init_size, self.init_size)
+        out = out.view(out.size(0), 512, self.init_size, self.init_size)
         img = self.net(out)
 
         return img
@@ -150,7 +186,7 @@ def generator_train_step(discriminator, generator, g_optimizer, batch_size,
     generator.train()
     discriminator.eval()  # optional
     z = torch.randn(batch_size, latent_space, device=next(generator.parameters()).device)
-    gen_labels = torch.randint(0, num_classes, (batch_size,), device=z.device)
+    gen_labels = torch.full((batch_size,), 3, device=z.device, dtype=torch.long)
 
     fake_images = generator(z, gen_labels)
     D_fake = discriminator(fake_images, gen_labels).view(batch_size)
@@ -337,9 +373,14 @@ def main():
     latent_space = 256
 
     fer2013_dataframe = pandas.read_csv('./data/FER2013/train.csv')
-    #resnet18().fc.in_features
+    resnet18().fc.in_features
     dataset = FERDataset(dataframe=fer2013_dataframe,transform=transform)
-    data_loader = DataLoader(dataset, batch_size=64, shuffle=True)
+
+    indices = [i for i, (_, label) in enumerate(dataset) if label == 3]
+    happy_dataset = Subset(dataset, indices)
+
+    data_loader = DataLoader(happy_dataset, batch_size=64, shuffle=True)
+
     img_shape = dataset[0][0].shape
     generator = Generator(latent_space,len(dataset.classes)).cuda()
     discriminator = ProjectionDiscriminator(img_shape,len(dataset.classes)).cuda()

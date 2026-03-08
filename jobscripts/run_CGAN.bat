@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#SBATCH -p gpuL 
+#SBATCH -p gpuA
 #SBATCH -G 1
 #SBATCH --output stdout-%j.log # stdout
 #SBATCH --error stderr-%j.log #stderr
@@ -23,4 +23,4 @@ source activate Self_Model
 cd ~/scratch/Self_Model/FER_Project
 
 # Run
-python -u -m CGAN.train
+python -u -m WGAN.train
