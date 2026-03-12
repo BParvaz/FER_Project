@@ -104,7 +104,7 @@ class Generator(nn.Module):
 
         Width = 512
 
-        self.init_size = 6  # 6x6 feature map
+        self.init_size = 4  # 4x4 feature map
         self.fc = nn.Linear(latent_dim + num_classes, Width * self.init_size * self.init_size)
 
 
@@ -113,10 +113,8 @@ class Generator(nn.Module):
                 super().__init__()
 
                 self.conv1 = nn.Conv2d(channels, channels, 3, padding=1)
-                self.bn1 = nn.BatchNorm2d(channels)
 
                 self.conv2 = nn.Conv2d(channels, channels, 3, padding=1)
-                self.bn2 = nn.BatchNorm2d(channels)
 
                 self.act = nn.LeakyReLU(0.2)
 
@@ -124,11 +122,11 @@ class Generator(nn.Module):
                 identity = x
 
                 out = self.conv1(x)
-                out = self.bn1(out)
+                #out = self.bn1(out)
                 out = self.act(out)
 
                 out = self.conv2(out)
-                out = self.bn2(out)
+                #out = self.bn2(out)
 
                 out = 0.1*out + identity   # ← residual connection
 
@@ -139,16 +137,14 @@ class Generator(nn.Module):
 
             # 512 to 256
             nn.ConvTranspose2d(Width, Width//2, 4, stride=2, padding=1),  # 12x12
-            nn.BatchNorm2d(Width//2),
-            nn.LeakyReLU(0.2, inplace=True),
+            # nn.BatchNorm2d(Width//2),
             RefinementBlock(Width//2),
 
 
 
             # 256 to 128
             nn.ConvTranspose2d(Width//2, Width//4, 4, stride=2, padding=1),  # 24 24
-            nn.BatchNorm2d(Width//4),
-            nn.LeakyReLU(0.2, inplace=True),
+            # nn.BatchNorm2d(Width//4),
             RefinementBlock(Width//4),
 
 
@@ -156,14 +152,11 @@ class Generator(nn.Module):
 
             # 128 to 64
             nn.ConvTranspose2d(Width//4, Width//8, 4, stride=2, padding=1),   # 48 48
-            nn.BatchNorm2d(Width//8),
-            nn.LeakyReLU(0.2, inplace=True),
+            # nn.BatchNorm2d(Width//8),
 
             RefinementBlock(Width//8),
             RefinementBlock(Width//8),
-
             RefinementBlock(Width//8),
-            nn.LeakyReLU(0.2),
 
             # final projection to image
             nn.Conv2d(Width//8, img_channels, kernel_size=3, stride=1, padding=1),
@@ -367,7 +360,7 @@ def create_final_graph(
 def main():
 
     # constant setup
-    num_epochs = 250
+    num_epochs = 500
     n_critic = 5
     lambda_gp = 10.0
     latent_space = 256
@@ -456,6 +449,40 @@ def main():
             
     create_final_gif(samples_dir=sample_dir, out_dir=gif_dir, tag=run.tag)
     create_final_graph(csv_path=log_csv, out_dir=plots_dir, tag=run.tag)
+
+def metric_evaluation(csv_path):
+
+    """
+    cheat sheet
+
+        Metrics             Formula             Evaluation                Values
+        Gap                 D_real - D_fake   
+        Ordering            D_real > D_fake
+        G_loss
+        D_loss
+        Gradient Penalty        
+
+
+    """
+    csv_path = Path(csv_path)
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    df = pandas.read_csv(csv_path)
+
+    required = ["epoch", "g_loss", "d_loss", "d_real", "d_fake", "gp", "gap"]
+    missing = [c for c in required if c not in df.columns]
+    if missing:
+        raise ValueError(f"Missing required columns: {missing}. Found: {list(df.columns)}")
+
+    # Ensure numeric + sort by epoch
+    for c in required + (["time"] if "time" in df.columns else []):
+        df[c] = pandas.to_numeric(df[c], errors="coerce")
+    df = df.dropna(subset=["epoch"]).sort_values("epoch").reset_index(drop=True)
+
+
+
+
 
 if __name__ == "__main__":
     main()
