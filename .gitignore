@@ -10,6 +10,7 @@ models/
 logs/
 # Logs for CGAN (Jupyter)
 
+Diffusion/img-conversion/fer_images
 
 temp_folder_saves/
 # Logs before extensive logging was implemented
@@ -27,3 +28,4 @@ checkpoint[s]_*
 
 __pycache__/
 *.py[cod]
+*.egg-info/

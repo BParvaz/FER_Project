@@ -1,0 +1,3 @@
+[submodule "Diffusion/improved-diffusion"]
+	path = Diffusion/improved-diffusion
+	url = https://github.com/BParvaz/improved-diffusion.git
