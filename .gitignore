@@ -29,3 +29,10 @@ checkpoint[s]_*
 __pycache__/
 *.py[cod]
 *.egg-info/
+
+Diffusion/classifier_logs_greedy
+Diffusion/classifier_logs_intensive
+Diffusion/classifier_sample_greedy
+Diffusion/guided_logs
+Diffusion/guided_logs_intensive
+.gitignore
