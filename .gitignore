@@ -35,4 +35,3 @@ Diffusion/classifier_logs_intensive
 Diffusion/classifier_sample_greedy
 Diffusion/guided_logs
 Diffusion/guided_logs_intensive
-.gitignore

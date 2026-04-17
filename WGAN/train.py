@@ -179,7 +179,7 @@ def generator_train_step(discriminator, generator, g_optimizer, batch_size,
     generator.train()
     discriminator.eval()  # optional
     z = torch.randn(batch_size, latent_space, device=next(generator.parameters()).device)
-    gen_labels = torch.full((batch_size,), 3, device=z.device, dtype=torch.long)
+    gen_labels = torch.full((batch_size,), num_classes, device=z.device, dtype=torch.long)
 
     fake_images = generator(z, gen_labels)
     D_fake = discriminator(fake_images, gen_labels).view(batch_size)
@@ -372,7 +372,7 @@ def main():
     indices = [i for i, (_, label) in enumerate(dataset) if label == 3]
     happy_dataset = Subset(dataset, indices)
 
-    data_loader = DataLoader(happy_dataset, batch_size=64, shuffle=True)
+    data_loader = DataLoader(dataset, batch_size=64, shuffle=True)
 
     img_shape = dataset[0][0].shape
     generator = Generator(latent_space,len(dataset.classes)).cuda()

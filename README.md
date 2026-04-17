@@ -1,6 +1,8 @@
 
 ## Facial Expression Recognition with Generative Augmentation
 
+This readme is outdated, view the original at https://github.com/BParvaz/FER_Project/
+
 ### Overview
 
 This project implements a facial expression recognition (FER) pipeline based on ResNet-18, with conditional WGAN-GP used for minority-class data augmentation.
