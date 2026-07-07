@@ -1,5 +1,8 @@
 #!/bin/bash --login
+#SBATCH --job-name=env_setup
 #SBATCH -p serial
+#SBATCH --output=/net/scratch/b84547bp/Self_Model/FER_Project/jobscripts/slurm/%x-%j.out
+#SBATCH --error=/net/scratch/b84547bp/Self_Model/FER_Project/jobscripts/slurm/%x-%j.err
 #SBATCH -t 0-1       # 1 hour wallclock time limit (max permitted is 7-0, i.e. 7 days)
 
 # generic jobscript for:

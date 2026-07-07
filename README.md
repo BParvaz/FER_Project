@@ -1,58 +1,56 @@
-
 ## Facial Expression Recognition with Generative Augmentation
 
-This readme is outdated, view the original at https://github.com/BParvaz/FER_Project/
+This repository contains the working code for facial expression recognition on
+FER2013 together with generative augmentation pipelines built around
+conditional WGAN-GP and class-conditional diffusion models.
 
 ### Overview
 
-This project implements a facial expression recognition (FER) pipeline based on ResNet-18, with conditional WGAN-GP used for minority-class data augmentation.
+The project is organised around three main tasks:
 
-The goal is to investigate whether generative models can mitigate class imbalance in FER datasets such as FER2013 and RAF-DB.
-
-A diffusion-based generative model is planned for comparison against the GAN-based approach.
+- training and evaluating a ResNet-18 FER baseline
+- generating synthetic minority-class samples with WGAN and diffusion models
+- filtering, curating, and replaying those synthetic samples in downstream FER experiments
 
 ----------
 
-### Motivation
+### Repository Layout
 
-Facial expression recognition has seen significant recent development, while still presenting open challenges — particularly in handling imbalanced emotion classes.
-
-Emerging research explores broader applications of affect recognition, including mental health–related contexts.
-
-This project serves both as a research investigation into generative augmentation and as a systems-level learning experience involving HPC workflows and experimental evaluation.
+- `Diffusion/`: diffusion model training, sampling, and FER image conversion
+- `WGAN/`: WGAN training code and generation entry points
+- `analysis/`: experiment utilities for curation, filtering, training, and statistics
+- `jobscripts/`: Slurm batch scripts used to run the pipelines on HPC
+- `models/`: saved FER classifiers and related checkpoints
+- `utils/`: small local utilities for unpacking sample archives and building contact sheets
 
 ----------
 
 ### Current Status
 
--   ResNet-18 classifier implemented in PyTorch
-    
--   Conditional WGAN-GP integrated for class-specific augmentation
-    
--   Multi-run training experiments conducted on institutional HPC (A100/L40S GPUs)
-    
--   Ongoing evaluation using macro F1, balanced accuracy, and per-class recall
-    
+- ResNet-18 training and evaluation scripts are in place for FER2013.
+- Diffusion training and classifier-guided sampling scripts have been updated
+  for a 7-class conditional setup.
+- Utility scripts now support repeatable FER image export, NPZ unpacking, and
+  contact-sheet generation for synthetic sample inspection.
+- Slurm job scripts have been consolidated around reproducible HPC runs.
 
 ----------
 
-### Roadmap
+### Typical Workflow
 
-1.  Rigorous validation and testing of existing training pipeline
-    
-2.  Implementation of diffusion-based generative baseline
-    
-3.  Further improvement of generator quality and stability
-    
-4.  Refactoring for improved modularity across datasets and use cases
-    
-5.  Improved command-line interface and usability
-    
-6.  Addition of representative synthetic samples
-    
+1. Convert FER2013 CSV data into image folders with
+   `jobscripts/convert_fer_images.bat` or
+   `Diffusion/img-conversion/convert.py`.
+2. Train or sample from the diffusion and WGAN models using the relevant
+   scripts in `jobscripts/`.
+3. Filter and curate synthetic outputs with the utilities in `analysis/`.
+4. Train and evaluate downstream FER classifiers on the curated datasets.
+
+See `jobscripts/README.md` for the current batch-script entry points.
 
 ----------
 
 ### Acknowledgements
 
-Thanks to Ainur for supervision and guidance, and to the team managing UoM’s HPC resources for supporting the computational work behind this project.
+Thanks to Ainur for supervision and guidance, and to the UoM HPC team for the
+compute environment used to run the larger training and sampling jobs.

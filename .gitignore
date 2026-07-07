@@ -19,6 +19,7 @@ temp_folder_saves/
 # Files
 -
 *.out
+*.err
 *.log
 # Slurm stdout and stderr
 
@@ -29,6 +30,28 @@ checkpoint[s]_*
 __pycache__/
 *.py[cod]
 *.egg-info/
+analysis/__pycache__/
+utils/__pycache__/
+jobscripts/slurm/*
+!jobscripts/slurm/.gitkeep
+analysis/build_diffusion_dose_visuals.py
+analysis/build_dissertation_eval_skeleton.py
+analysis/build_report_visuals.py
+jobscripts/build_diffusion_dose_visuals.bat
+jobscripts/build_dissertation_eval_skeleton.bat
+jobscripts/build_report_visuals.bat
+
+DIFFUSION_DEBUG_NOTES.txt
+report_visuals_results_section/
+reports/
+writeuppackage/
+terrible_classifier_guided_samples/
+WGAN/generated_samples/
+Diffusion/classifier_sample_*/
+Diffusion/image_sample_*/
+Diffusion/intensive_trained_models/
+Diffusion/logs_bla/
+Diffusion/proof_of_concept_models/
 
 Diffusion/classifier_logs_greedy
 Diffusion/classifier_logs_intensive

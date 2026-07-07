@@ -1,8 +1,9 @@
 #!/bin/bash --login
+#SBATCH --job-name=run_WGAN
 #SBATCH -p gpuA
 #SBATCH -G 1
-#SBATCH --output stdout-%j.log # stdout
-#SBATCH --error stderr-%j.log #stderr
+#SBATCH --output=/net/scratch/b84547bp/Self_Model/FER_Project/jobscripts/slurm/%x-%j.out
+#SBATCH --error=/net/scratch/b84547bp/Self_Model/FER_Project/jobscripts/slurm/%x-%j.err
 #SBATCH --ntasks-per-node 8
 #SBATCH -t 0-4
 

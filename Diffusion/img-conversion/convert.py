@@ -1,14 +1,10 @@
-import os
+import argparse
+import shutil
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
 from PIL import Image
-
-# path to FER2013 csv
-csv_path = "../../data/FER2013/train.csv"
-test_path = "../../data/FER2013/test.csv"
-
-# output folder
-output_dir = "fer_images"
 
 # emotion labels
 emotion_map = {
@@ -21,48 +17,42 @@ emotion_map = {
     6: "neutral"
 }
 
-# load dataset
-train_df = pd.read_csv(csv_path)
-test_df = pd.read_csv(csv_path)
 
-for i, row in train_df.iterrows():
+def export_split(csv_path: Path, out_dir: Path, clean: bool = False) -> None:
+    if clean and out_dir.exists():
+        shutil.rmtree(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
 
-    emotion = emotion_map[row["emotion"]]
+    df = pd.read_csv(csv_path)
+    has_labels = "emotion" in df.columns
+    for i, row in df.iterrows():
+        pixels = np.array(row["pixels"].split(), dtype=np.uint8)
+        image = Image.fromarray(pixels.reshape(48, 48))
 
-    # create folder if needed
-    os.makedirs(f"{output_dir}/train", exist_ok=True)
+        if has_labels:
+            emotion_id = int(row["emotion"])
+            emotion_name = emotion_map[emotion_id]
+            # Numeric prefix keeps guided-diffusion class ids aligned with FER2013.
+            filename = f"{emotion_id}_{emotion_name}_{i}.png"
+        else:
+            filename = f"unlabeled_{i}.png"
 
-    # convert pixel string to array
-    pixels = np.array(row["pixels"].split(), dtype=np.uint8)
+        image.save(out_dir / filename)
 
-    # reshape to image
-    img = pixels.reshape(48, 48)
+    print(f"done with {out_dir.name}: {len(df)} images")
 
-    # convert to PIL image
-    image = Image.fromarray(img)
 
-    # save
-    image.save(f"{output_dir}/train/{emotion}_{i}.png")
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--train-csv", type=Path, default=Path("../../data/FER2013/train.csv"))
+    parser.add_argument("--test-csv", type=Path, default=Path("../../data/FER2013/test.csv"))
+    parser.add_argument("--output-dir", type=Path, default=Path("fer_images"))
+    parser.add_argument("--clean", action="store_true")
+    args = parser.parse_args()
 
-print("done with train")
+    export_split(args.train_csv, args.output_dir / "train", clean=args.clean)
+    export_split(args.test_csv, args.output_dir / "test", clean=args.clean)
 
-for i, row in test_df.iterrows():
 
-    emotion = emotion_map[row["emotion"]]
-
-    # create folder if needed
-    os.makedirs(f"{output_dir}/test", exist_ok=True)
-
-    # convert pixel string to array
-    pixels = np.array(row["pixels"].split(), dtype=np.uint8)
-
-    # reshape to image
-    img = pixels.reshape(48, 48)
-
-    # convert to PIL image
-    image = Image.fromarray(img)
-
-    # save
-    image.save(f"{output_dir}/test/{emotion}_{i}.png")
-
-print("done with test")
+if __name__ == "__main__":
+    main()

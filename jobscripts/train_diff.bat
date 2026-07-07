@@ -1,8 +1,9 @@
 #!/bin/bash --login
+#SBATCH --job-name=train_diff
 #SBATCH -p gpuL
 #SBATCH -G 1
-#SBATCH --output stdout-%j.log # stdout
-#SBATCH --error stderr-%j.log #stderr
+#SBATCH --output=/net/scratch/b84547bp/Self_Model/FER_Project/jobscripts/slurm/%x-%j.out
+#SBATCH --error=/net/scratch/b84547bp/Self_Model/FER_Project/jobscripts/slurm/%x-%j.err
 #SBATCH --ntasks-per-node 8
 #SBATCH -t 1-0
 
